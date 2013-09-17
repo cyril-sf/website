@@ -92,6 +92,72 @@ return the JSON in the following format:
 }
 ```
 
+### Polymorphic associations
+
+Given the following models:
+
+```js
+var attr = DS.attr,
+    hasMany = DS.hasMany,
+    belongsTo = DS.belongsTo;
+
+App.Message = DS.Model.extend({
+  comments: hasMany('comment', {
+    inverse: 'message'
+  })
+});
+
+App.Post = App.Message.extend({
+  title: attr()
+});
+
+App.Comment = App.Message.extend({
+  body: attr(),
+  message: belongsTo('message', {
+    polymorphic: true,
+    inverse: 'comments'
+  )
+});
+```
+Ember Data with the `RESTAdapter` expects that a `GET` request to `/comments/1` would
+return the JSON in the following format:
+
+```js
+{
+  "comment": {
+    "id": "1",
+    "body": "Rails is unagi",
+    "message": "1",
+    "message_type": "post"
+  },
+
+  "post": {
+    "id": 1
+    "title": "Rails is omakase",
+    "comments": ["1"]
+  }
+}
+```
+
+With the `ActiveModelAdapter`, the expected result is:
+
+```js
+{
+  "comment": {
+    "id": "1",
+    "body": "Rails is unagi",
+    "message_id": "1",
+    "message_type": "Post"
+  },
+
+  "post": {
+    "id": 1
+    "title": "Rails is omakase",
+    "comments": ["1"]
+  }
+}
+```
+
 ### Customizing the Adapter
 
 To customize the REST adapter, define a subclass of `DS.RESTAdapter` and
